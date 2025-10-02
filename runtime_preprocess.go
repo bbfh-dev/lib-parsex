@@ -4,6 +4,7 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/bbfh-dev/berr"
 	"github.com/bbfh-dev/parsex/v2/internal"
 	"github.com/iancoleman/strcase"
 )
@@ -15,20 +16,20 @@ func (runtime *runtimeType) preprocess() error {
 
 	typePtr := reflect.TypeOf(runtime.data)
 	if typePtr.Kind() != reflect.Pointer {
-		return ErrProgramData{
-			ErrKind: ErrKindMustbePointer,
-			Name:    runtime.name,
-			Type:    typePtr,
-		}
+		return berr.WithContext(
+			runtime.name,
+			ErrMustbePointer,
+			"Provided Program.Data", typePtr,
+		)
 	}
 
 	typeElem := typePtr.Elem()
 	if typeElem.Kind() != reflect.Struct {
-		return ErrProgramData{
-			ErrKind: ErrKindPointToStruct,
-			Name:    runtime.name,
-			Type:    typePtr,
-		}
+		return berr.WithContext(
+			runtime.name,
+			ErrMustPointToStruct,
+			"Provided *Program.Data", typePtr,
+		)
 	}
 
 	valueElem := reflect.ValueOf(runtime.data).Elem()

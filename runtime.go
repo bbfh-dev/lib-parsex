@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bbfh-dev/berr"
 	"github.com/bbfh-dev/parsex/v2/internal"
 )
 
@@ -120,29 +121,23 @@ iterate:
 	lenProv := len(runtime.exec.Args)
 	lenReq := len(runtime.genReqPosArgs)
 	if lenProv < lenReq {
-		return ErrInput{
-			ErrKind:     ErrKindNotEnoughArgs,
-			Name:        runtime.name,
-			RequiredLen: lenReq,
-			ProvidedLen: lenProv,
-			ExecArgs:    runtime.exec.Args,
-			ArgPrinter:  runtime.printArgs,
-		}
+		var args strings.Builder
+		runtime.printArgs(&args)
+		return berr.WithContext(
+			runtime.name,
+			ErrNotEnoughArgs,
+			"required length", lenReq,
+			"provided length", lenProv,
+			"exec args", runtime.exec.Args,
+			"arg printer", args.String(),
+		)
 	}
 
 	if runtime.exec.Function == nil {
-		return ErrExecution{
-			ErrKind: ErrKindExecIsNil,
-			Name:    runtime.name,
-			Err:     nil,
-		}
+		return berr.New(runtime.name, ErrExecIsNil)
 	}
 	if err := runtime.exec.Run(); err != nil {
-		return ErrExecution{
-			ErrKind: ErrKindExecution,
-			Name:    runtime.name,
-			Err:     err,
-		}
+		return berr.New(runtime.name, err)
 	}
 	return nil
 }
