@@ -57,7 +57,7 @@ func (option *ParsedOption) String() string {
 
 	builder.WriteString("\n")
 	if option.Desc != "" {
-		builder.WriteString("        # " + option.Desc)
+		builder.WriteString("        # " + option.Desc + "\n")
 	}
 
 	return builder.String()
