@@ -136,26 +136,30 @@ func (program *Program) parseOptions() error {
 }
 
 func (program *Program) parseArgs() error {
-	// TODO: this
 	if err := program.expectStructPtr("Args", reflect.TypeOf(program.Args)); err != nil {
 		return err
 	}
 
-	reflect_type := reflect.TypeOf(program.Options).Elem()
-	// reflect_value := reflect.ValueOf(program.Options).Elem()
+	reflect_type := reflect.TypeOf(program.Args).Elem()
+	reflect_value := reflect.ValueOf(program.Args).Elem()
 
 	for i := range reflect_type.NumField() {
 		field := reflect_type.Field(i)
-		// reflect_field := reflect_value.Field(i)
+		reflect_field := reflect_value.Field(i)
 
+		tag := internal.ARG_DEFAULT
 		switch field.Type.Kind() {
 		case reflect.Pointer:
+			tag = internal.ARG_OPTIONAL
+		case reflect.Slice:
+			tag = internal.ARG_VARIADIC
 		}
 
 		arg := &internal.ParsedArgument{
 			Name: field.Name,
-			Kind: 0,
-			Ref:  &reflect.Value{},
+			Kind: field.Type.Kind(),
+			Tag:  tag,
+			Ref:  &reflect_field,
 		}
 		program.parsedArgs = append(program.parsedArgs, arg)
 	}
