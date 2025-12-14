@@ -56,6 +56,7 @@ type Program struct {
 	parsedOptions   []*internal.ParsedOption
 	parsedOptionMap map[string]*internal.ParsedOption
 	parsedArgs      []*internal.ParsedArgument
+	parsedCommands  map[string]*Program
 }
 
 func (program *Program) HasVersion() bool {
@@ -73,6 +74,12 @@ func (program *Program) Parse() error {
 		internal.VersionOption.Name: &internal.VersionOption,
 	}
 	program.parsedArgs = []*internal.ParsedArgument{}
+	program.parsedCommands = map[string]*Program{}
+
+	// Used for quick checks
+	for _, command := range program.Commands {
+		program.parsedCommands[command.Name] = command
+	}
 
 	if err := program.parseOptions(); err != nil {
 		return err
