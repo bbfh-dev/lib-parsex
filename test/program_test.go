@@ -24,7 +24,7 @@ func TestProgram(test *testing.T) {
 		Options:     &options,
 		Args:        &args,
 		EntryPoint: func() error {
-			return nil
+			return libparsex.PrintHelpErr
 		},
 	}
 
