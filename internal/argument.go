@@ -5,17 +5,18 @@ import (
 	"strings"
 )
 
-type ArgumentKind byte
+type ArgumentTag byte
 
 const (
-	ARG_DEFAULT ArgumentKind = iota
+	ARG_DEFAULT ArgumentTag = iota
 	ARG_OPTIONAL
 	ARG_VARIADIC
 )
 
 type ParsedArgument struct {
 	Name string
-	Kind ArgumentKind
+	Kind reflect.Kind
+	Tag  ArgumentTag
 
 	Ref *reflect.Value
 }
@@ -26,7 +27,7 @@ func (arg *ParsedArgument) String() string {
 	builder.Grow(len(arg.Name) + 2 + 3)
 
 	builder.WriteString("<" + arg.Name)
-	switch arg.Kind {
+	switch arg.Tag {
 	case ARG_OPTIONAL:
 		builder.WriteString("?")
 	case ARG_VARIADIC:
