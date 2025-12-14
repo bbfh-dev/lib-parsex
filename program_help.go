@@ -2,17 +2,15 @@ package libparsex
 
 import (
 	"bytes"
+	"fmt"
 	"io"
-	"strings"
 )
 
 var printIndent = bytes.Repeat([]byte{' '}, 4)
 var printNewLine = []byte{'\n'}
 
 func (program *Program) String() string {
-	var builder strings.Builder
-	program.PrintHelp(&builder)
-	return builder.String()
+	return fmt.Sprintf("    %s\n        # %s\n", program.Name, program.Description)
 }
 
 func (program *Program) PrintVersion(writer io.Writer) {
@@ -40,6 +38,15 @@ func (program *Program) PrintHelp(writer io.Writer) {
 		writer.Write([]byte(" " + arg.String()))
 	}
 	writer.Write(printNewLine)
+
+	if program.Commands != nil {
+		writer.Write(printNewLine)
+		writer.Write([]byte("[>] Commands:"))
+		writer.Write(printNewLine)
+		for _, command := range program.Commands {
+			writer.Write([]byte(command.String()))
+		}
+	}
 
 	writer.Write(printNewLine)
 	writer.Write([]byte("[#] Options:"))

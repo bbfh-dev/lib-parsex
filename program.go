@@ -45,6 +45,10 @@ type Program struct {
 	//
 	// NOTE: Optional arguments must be in the end.
 	Args any
+	// Commands are other sub-programs that have their own nested options and arguments.
+	//
+	// NOTE: Parent's .Options will be parsed and set up and until the command name is mentioned in the input.
+	Commands []*Program
 	// The function that will be called when running the Program.
 	EntryPoint func() error
 

@@ -23,6 +23,9 @@ func TestProgram(test *testing.T) {
 		Description: "This is an example program",
 		Options:     &options,
 		Args:        &args,
+		Commands: []*libparsex.Program{
+			{Name: "nested", Description: "Example nested command"},
+		},
 		EntryPoint: func() error {
 			return libparsex.PrintHelpErr
 		},
