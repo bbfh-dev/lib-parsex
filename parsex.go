@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"slices"
 	"strings"
 
 	"github.com/bbfh-dev/lib-parsex/v3/internal"
@@ -49,136 +48,43 @@ func parseInput(program *Program, args []string) (*Program, error) {
 		return program, nil
 	}
 
-	were_modified := make([]string, 0, len(args))
-	input := make([]string, 0, len(args))
+	modifiedOptions := make(map[string]bool)
+	positionalArgs := make([]string, 0, len(args))
 
 	for i := 0; i < len(args); i++ {
-		// Regular argument or command
-		if !strings.HasPrefix(args[i], "-") {
-			command, ok := program.parsedCommands[args[i]]
-			if !ok {
-				input = append(input, args[i])
-				continue
-			}
+		arg := args[i]
 
-			return parseCommand(command, args[i+1:])
+		if !strings.HasPrefix(arg, "-") {
+			if cmd, ok := program.parsedCommands[arg]; ok {
+				return parseCommand(cmd, args[i+1:])
+			}
+			positionalArgs = append(positionalArgs, arg)
+			continue
 		}
 
-		// Long option
-		if prefix := "--"; strings.HasPrefix(args[i], prefix) {
-			arg := args[i][len(prefix):]
+		if arg == "--" {
+			positionalArgs = append(positionalArgs, args[i+1:]...)
+			break
+		}
 
-			if arg == "" {
-				// Everything after '--' is a positional argument
-				input = append(input, args[i+1:]...)
-				break
-			}
-
-			parts := strings.SplitN(arg, "=", 2)
-			arg = parts[0]
-
-			option, ok := program.parsedOptionMap[arg]
-			if !ok {
-				return program, fmt.Errorf("unknown option %q. %s", args[i], PrintHelpErr.Error())
-			}
-
-			were_modified = append(were_modified, option.Name)
-
-			if err := parseLongOption(option, parts, args, &i); err != nil {
+		if strings.HasPrefix(arg, "--") {
+			if err := handleLongOption(program, arg[2:], args, &i, modifiedOptions); err != nil {
 				return program, err
 			}
 			continue
 		}
 
-		// Short options
-		arg := args[i][1:]
-		if arg == "" {
-			input = append(input, args[i])
-			continue
-		}
-
-		parts := strings.SplitN(arg, "=", 2)
-		arg = parts[0]
-
-		option, ok := program.parsedOptionMap[arg]
-		if ok {
-			were_modified = append(were_modified, option.Name)
-			if err := parseLongOption(option, parts, args, &i); err != nil {
-				return program, err
-			}
-			continue
-		}
-
-		if len(arg) == 1 {
-			option, ok := program.parsedAltMap[arg]
-			if !ok {
-				return program, fmt.Errorf("unknown option %q. %s", args[i], PrintHelpErr.Error())
-			}
-			were_modified = append(were_modified, option.Name)
-			if option.Type == reflect.Bool {
-				option.Ref.SetBool(true)
-				continue
-			}
-			if err := parseLongOption(option, parts, args, &i); err != nil {
-				return program, err
-			}
-			continue
-		}
-
-		// combined flag
-		for char := range strings.SplitSeq(arg, "") {
-			option, ok := program.parsedAltMap[char]
-			if !ok {
-				return program, fmt.Errorf(
-					"provided option %q is neither a long or combined option. %s",
-					args[i],
-					PrintHelpErr.Error(),
-				)
-			}
-			if option.Type != reflect.Bool {
-				return program, fmt.Errorf(
-					"provided combined flag %q contains a non-flag option %q. %s",
-					args[i],
-					option.Name,
-					PrintHelpErr.Error(),
-				)
-			}
-			option.Ref.SetBool(true)
+		if err := handleShortOption(program, arg[1:], args, &i, modifiedOptions); err != nil {
+			return program, err
 		}
 	}
 
-	// Set default values
-	for _, option := range program.parsedOptions {
-		if slices.Contains(were_modified, option.Name) {
-			continue
-		}
-
-		if option.Default != nil {
-			if err := option.Set(*option.Default); err != nil {
-				return program, err
-			}
-		}
+	if err := applyDefaultOptions(program, modifiedOptions); err != nil {
+		return program, err
 	}
 
-	for i, arg := range program.parsedArgs {
-		if i >= len(input) {
-			if arg.Tag != internal.ARG_DEFAULT {
-				break
-			}
-			return program, fmt.Errorf(
-				"expected an argument %q but got none. %s",
-				arg.String(),
-				PrintHelpErr.Error(),
-			)
-		}
-		switch arg.Tag {
-
-		case internal.ARG_VARIADIC:
-			arg.Ref.Set(reflect.ValueOf(input[i:]))
-
-		default:
-			arg.Set(input[i])
-		}
+	if err := assignPositionalArgs(program, positionalArgs); err != nil {
+		return program, err
 	}
 
 	return program, nil
@@ -191,7 +97,89 @@ func parseCommand(command *Program, args []string) (*Program, error) {
 	return parseInput(command, args)
 }
 
-func parseLongOption(option *internal.ParsedOption, parts []string, args []string, i *int) error {
+func handleLongOption(
+	program *Program,
+	raw string,
+	args []string,
+	index *int,
+	modified map[string]bool,
+) error {
+	parts := strings.SplitN(raw, "=", 2)
+	name := parts[0]
+
+	option, ok := program.parsedOptionMap[name]
+	if !ok {
+		return fmt.Errorf("unknown option %q. %s", "--"+raw, PrintHelpErr.Error())
+	}
+
+	modified[option.Name] = true
+	return parseOptionValue(option, parts, args, index)
+}
+
+func handleShortOption(
+	program *Program,
+	raw string,
+	args []string,
+	index *int,
+	modified map[string]bool,
+) error {
+	if raw == "" {
+		return nil
+	}
+
+	parts := strings.SplitN(raw, "=", 2)
+	name := parts[0]
+
+	if option, ok := program.parsedOptionMap[name]; ok {
+		modified[option.Name] = true
+		return parseOptionValue(option, parts, args, index)
+	}
+
+	if len(name) == 1 {
+		option, ok := program.parsedAltMap[name]
+		if !ok {
+			return fmt.Errorf("unknown option %q. %s", "-"+raw, PrintHelpErr.Error())
+		}
+		modified[option.Name] = true
+
+		if option.Type == reflect.Bool {
+			option.Ref.SetBool(true)
+			return nil
+		}
+
+		return parseOptionValue(option, parts, args, index)
+	}
+
+	for _, char := range name {
+		option, ok := program.parsedAltMap[string(char)]
+		if !ok {
+			return fmt.Errorf(
+				"provided option %q is neither a long or combined option. %s",
+				"-"+raw,
+				PrintHelpErr.Error(),
+			)
+		}
+		if option.Type != reflect.Bool {
+			return fmt.Errorf(
+				"provided combined flag %q contains a non-flag option %q. %s",
+				"-"+raw,
+				option.Name,
+				PrintHelpErr.Error(),
+			)
+		}
+		option.Ref.SetBool(true)
+		modified[option.Name] = true
+	}
+
+	return nil
+}
+
+func parseOptionValue(
+	option *internal.ParsedOption,
+	parts []string,
+	args []string,
+	index *int,
+) error {
 	switch option.Name {
 	case internal.HelpOption.Name:
 		return PrintHelpErr
@@ -205,25 +193,53 @@ func parseLongOption(option *internal.ParsedOption, parts []string, args []strin
 	}
 
 	if len(parts) == 2 {
-		if err := option.Set(parts[1]); err != nil {
-			return err
-		}
-		return nil
+		return option.Set(parts[1])
 	}
 
-	if *i+1 >= len(args) {
+	if *index+1 >= len(args) {
 		return fmt.Errorf(
 			"option %q requires a value <%s>. %s",
-			args[*i],
+			args[*index],
 			option.Type.String(),
 			PrintHelpErr.Error(),
 		)
 	}
 
-	*i++
-	if err := option.Set(args[*i]); err != nil {
-		return err
-	}
+	*index++
+	return option.Set(args[*index])
+}
 
+func applyDefaultOptions(program *Program, modified map[string]bool) error {
+	for _, option := range program.parsedOptions {
+		if modified[option.Name] || option.Default == nil {
+			continue
+		}
+		if err := option.Set(*option.Default); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func assignPositionalArgs(program *Program, input []string) error {
+	for i, arg := range program.parsedArgs {
+		if i >= len(input) {
+			if arg.Tag == internal.ARG_DEFAULT {
+				return fmt.Errorf(
+					"expected an argument %q but got none. %s",
+					arg.String(),
+					PrintHelpErr.Error(),
+				)
+			}
+			break
+		}
+
+		if arg.Tag == internal.ARG_VARIADIC {
+			arg.Ref.Set(reflect.ValueOf(input[i:]))
+			return nil
+		}
+
+		arg.Set(input[i])
+	}
 	return nil
 }
