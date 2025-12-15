@@ -126,9 +126,9 @@ func (program *Program) parseOptions() error {
 		field := reflect_type.Field(i)
 		reflect_field := reflect_value.Field(i)
 
-		var default_value any
+		var default_value *string
 		if value, ok := field.Tag.Lookup("default"); ok {
-			default_value = value
+			default_value = &value
 		}
 
 		option := &internal.ParsedOption{
@@ -167,7 +167,7 @@ func (program *Program) parseArgs() error {
 		}
 
 		arg := &internal.ParsedArgument{
-			Name: field.Name,
+			Name: strcase.ToKebab(field.Name),
 			Kind: field.Type.Kind(),
 			Tag:  tag,
 			Ref:  &reflect_field,

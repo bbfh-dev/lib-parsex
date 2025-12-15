@@ -7,30 +7,53 @@ import (
 	"gotest.tools/assert"
 )
 
-func TestProgram(test *testing.T) {
-	var options struct {
-		Verbose bool `desc:"Print verbose debug information"`
-	}
+var DidRun bool
 
-	var args struct {
-		count int
-		input []string
-	}
+type ExpectedOptions struct {
+	Verbose       bool
+	StdinFilePath string
+	OtherValue    int
+}
 
-	program := libparsex.Program{
-		Name:        "example",
-		Version:     "0.1.2-beta.1",
-		Description: "This is an example program",
-		Options:     &options,
-		Args:        &args,
-		Commands: []*libparsex.Program{
-			{Name: "nested", Description: "Example nested command"},
-		},
-		EntryPoint: func() error {
-			return libparsex.PrintHelpErr
-		},
-	}
+var Options struct {
+	Verbose       bool   `alt:"v" desc:"Print verbose debug information"`
+	StdinFilePath string `        desc:"Path to the file to pretend that stdin comes from"`
+	OtherValue    int    `                                                                 default:"69"`
+}
 
-	err := libparsex.Run(&program, []string{})
+type ExpectedArgs struct {
+	Count int
+	Input []string
+}
+
+var Args struct {
+	Count int
+	Input []string
+}
+
+var Program = libparsex.Program{
+	Name:        "example",
+	Version:     "0.1.2-beta.1",
+	Description: "This is an example program",
+	Options:     &Options,
+	Args:        &Args,
+	Commands: []*libparsex.Program{
+		{Name: "nested", Description: "Example nested command"},
+	},
+	EntryPoint: func() error {
+		DidRun = true
+		return nil
+	},
+}
+
+func TestHelp(test *testing.T) {
+	err := libparsex.Run(&Program, []string{"--help"})
 	assert.NilError(test, err)
+}
+
+func TestCall(test *testing.T) {
+	DidRun = false
+	err := libparsex.Run(&Program, []string{})
+	assert.NilError(test, err)
+	assert.Equal(test, DidRun, true)
 }

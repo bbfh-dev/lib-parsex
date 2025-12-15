@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -29,7 +30,7 @@ type ParsedOption struct {
 	Type    reflect.Kind
 	Alt     string
 	Desc    string
-	Default any
+	Default *string
 
 	Ref *reflect.Value
 }
@@ -47,12 +48,7 @@ func (option *ParsedOption) String() string {
 	}
 
 	if option.Default != nil {
-		switch default_value := option.Default.(type) {
-		case string:
-			fmt.Fprintf(&builder, " (default: %q)", default_value)
-		default:
-			fmt.Fprintf(&builder, " (default: %v)", default_value)
-		}
+		fmt.Fprintf(&builder, " (default: %v)", *option.Default)
 	}
 
 	builder.WriteString("\n")
@@ -61,4 +57,44 @@ func (option *ParsedOption) String() string {
 	}
 
 	return builder.String()
+}
+
+func (option *ParsedOption) wrapError(err error) error {
+	return fmt.Errorf(
+		"option '%s <%s>': %w",
+		option.Name,
+		option.Type.String(),
+		err,
+	)
+}
+
+func (option *ParsedOption) Set(value string) error {
+	switch option.Type {
+
+	case reflect.String:
+		option.Ref.SetString(value)
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		value, err := strconv.Atoi(value)
+		if err != nil {
+			return option.wrapError(err)
+		}
+		option.Ref.SetInt(int64(value))
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		value, err := strconv.Atoi(value)
+		if err != nil {
+			return option.wrapError(err)
+		}
+		option.Ref.SetUint(uint64(value))
+
+	case reflect.Float32, reflect.Float64:
+		value, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return option.wrapError(err)
+		}
+		option.Ref.SetFloat(float64(value))
+	}
+
+	return nil
 }
