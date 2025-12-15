@@ -135,11 +135,13 @@ func (program *Program) parseOptions() error {
 
 		option := &internal.ParsedOption{
 			Name:    strcase.ToKebab(field.Name),
-			Type:    field.Type.Kind(),
 			Alt:     field.Tag.Get("alt"),
 			Desc:    field.Tag.Get("desc"),
 			Default: default_value,
-			Ref:     &reflect_field,
+			Ref: internal.Ref{
+				Kind:    field.Type.Kind(),
+				Pointer: &reflect_field,
+			},
 		}
 		program.parsedOptions = append(program.parsedOptions, option)
 		program.parsedOptionMap[option.Name] = option
@@ -173,9 +175,11 @@ func (program *Program) parseArgs() error {
 
 		arg := &internal.ParsedArgument{
 			Name: strcase.ToKebab(field.Name),
-			Kind: field.Type.Kind(),
 			Tag:  tag,
-			Ref:  &reflect_field,
+			Ref: internal.Ref{
+				Kind:    field.Type.Kind(),
+				Pointer: &reflect_field,
+			},
 		}
 		program.parsedArgs = append(program.parsedArgs, arg)
 	}

@@ -2,8 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -17,10 +15,9 @@ const (
 
 type ParsedArgument struct {
 	Name string
-	Kind reflect.Kind
 	Tag  ArgumentTag
 
-	Ref *reflect.Value
+	Ref
 }
 
 func (arg *ParsedArgument) String() string {
@@ -40,41 +37,10 @@ func (arg *ParsedArgument) String() string {
 	return builder.String()
 }
 
-func (arg *ParsedArgument) wrapError(err error) error {
+func (arg *ParsedArgument) WrapError(err error) error {
 	return fmt.Errorf(
 		"argument %q: %w",
 		arg.String(),
 		err,
 	)
-}
-
-func (arg *ParsedArgument) Set(value string) error {
-	switch arg.Kind {
-
-	case reflect.String:
-		arg.Ref.SetString(value)
-
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		value, err := strconv.Atoi(value)
-		if err != nil {
-			return arg.wrapError(err)
-		}
-		arg.Ref.SetInt(int64(value))
-
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		value, err := strconv.Atoi(value)
-		if err != nil {
-			return arg.wrapError(err)
-		}
-		arg.Ref.SetUint(uint64(value))
-
-	case reflect.Float32, reflect.Float64:
-		value, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			return arg.wrapError(err)
-		}
-		arg.Ref.SetFloat(float64(value))
-	}
-
-	return nil
 }

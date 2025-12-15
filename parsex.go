@@ -142,8 +142,8 @@ func handleShortOption(
 		}
 		modified[option.Name] = true
 
-		if option.Type == reflect.Bool {
-			option.Ref.SetBool(true)
+		if option.Kind == reflect.Bool {
+			option.Ref.Pointer.SetBool(true)
 			return nil
 		}
 
@@ -159,7 +159,7 @@ func handleShortOption(
 				PrintHelpErr.Error(),
 			)
 		}
-		if option.Type != reflect.Bool {
+		if option.Kind != reflect.Bool {
 			return fmt.Errorf(
 				"provided combined flag %q contains a non-flag option %q. %s",
 				"-"+raw,
@@ -167,7 +167,7 @@ func handleShortOption(
 				PrintHelpErr.Error(),
 			)
 		}
-		option.Ref.SetBool(true)
+		option.Ref.Pointer.SetBool(true)
 		modified[option.Name] = true
 	}
 
@@ -187,8 +187,8 @@ func parseOptionValue(
 		return PrintVersionErr
 	}
 
-	if option.Type == reflect.Bool {
-		option.Ref.SetBool(true)
+	if option.Kind == reflect.Bool {
+		option.Ref.Pointer.SetBool(true)
 		return nil
 	}
 
@@ -200,7 +200,7 @@ func parseOptionValue(
 		return fmt.Errorf(
 			"option %q requires a value <%s>. %s",
 			args[*index],
-			option.Type.String(),
+			option.Kind.String(),
 			PrintHelpErr.Error(),
 		)
 	}
@@ -235,7 +235,7 @@ func assignPositionalArgs(program *Program, input []string) error {
 		}
 
 		if arg.Tag == internal.ARG_VARIADIC {
-			arg.Ref.Set(reflect.ValueOf(input[i:]))
+			arg.Ref.Pointer.Set(reflect.ValueOf(input[i:]))
 			return nil
 		}
 
