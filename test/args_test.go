@@ -111,6 +111,16 @@ var ArgTestCases = []ArgTestCase{
 		Input:     []string{"-v"},
 		ExpectErr: "expected an argument",
 	},
+	{
+		Input: []string{"--", "5", "-v", "file1", "file2", "file3"},
+		ExpectOptions: ExpectedOptions{
+			OtherValue: 69,
+		},
+		ExpectArgs: ExpectedArgs{
+			Count: 5,
+			Input: []string{"-v", "file1", "file2", "file3"},
+		},
+	},
 }
 
 func TestArgs(test *testing.T) {
