@@ -9,7 +9,12 @@ import (
 var printIndent = strings.Repeat(" ", 4)
 
 func (program *Program) String() string {
-	return fmt.Sprintf("    %s\n        # %s\n", program.Name, program.Description)
+	return fmt.Sprintf(
+		"%[1]s%[2]s\n%[1]s%[1]s# %[3]s\n",
+		printIndent,
+		program.Name,
+		program.Description,
+	)
 }
 
 func (program *Program) PrintVersion(writer io.Writer) {
