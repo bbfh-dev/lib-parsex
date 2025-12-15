@@ -1,13 +1,12 @@
 package libparsex
 
 import (
-	"bytes"
 	"fmt"
 	"io"
+	"strings"
 )
 
-var printIndent = bytes.Repeat([]byte{' '}, 4)
-var printNewLine = []byte{'\n'}
+var printIndent = strings.Repeat(" ", 4)
 
 func (program *Program) String() string {
 	return fmt.Sprintf("    %s\n        # %s\n", program.Name, program.Description)
@@ -18,41 +17,35 @@ func (program *Program) PrintVersion(writer io.Writer) {
 	if program.HasVersion() {
 		writer.Write([]byte(" " + program.Version))
 	}
-	writer.Write(printNewLine)
+	writer.Write([]byte{'\n'})
 }
 
 func (program *Program) PrintHelp(writer io.Writer) {
 	program.PrintVersion(writer)
-	writer.Write(printNewLine)
+
 	if program.Description != "" {
-		writer.Write([]byte(program.Description))
-		writer.Write(printNewLine)
+		fmt.Fprintln(writer, "\n"+program.Description)
 	}
 
-	writer.Write(printNewLine)
-	writer.Write([]byte("[?] Usage:"))
-	writer.Write(printNewLine)
-	writer.Write(printIndent)
-	writer.Write([]byte(program.Name + " [options...]"))
-	for _, arg := range program.parsedArgs {
-		writer.Write([]byte(" " + arg.String()))
-	}
-	writer.Write(printNewLine)
+	fmt.Fprintln(writer, "\n[?] Usage:")
+	fmt.Fprint(writer, printIndent)
+	fmt.Fprint(writer, program.Name, " [options...]")
 
-	if program.Commands != nil {
-		writer.Write(printNewLine)
-		writer.Write([]byte("[>] Commands:"))
-		writer.Write(printNewLine)
+	for _, argument := range program.parsedArgs {
+		fmt.Fprint(writer, " ", argument.String())
+	}
+	fmt.Fprint(writer, "\n")
+
+	if len(program.Commands) > 0 {
+		fmt.Fprintln(writer, "\n[>] Commands:")
 		for _, command := range program.Commands {
-			writer.Write([]byte(command.String()))
+			fmt.Fprint(writer, command.String())
 		}
 	}
 
-	writer.Write(printNewLine)
-	writer.Write([]byte("[#] Options:"))
-	writer.Write(printNewLine)
+	fmt.Fprintln(writer, "\n[#] Options:")
 	for _, option := range program.parsedOptions {
-		writer.Write(printIndent)
-		writer.Write([]byte(option.String()))
+		fmt.Fprint(writer, printIndent)
+		fmt.Fprint(writer, option.String())
 	}
 }
