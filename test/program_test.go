@@ -1,6 +1,7 @@
 package libparsex_test
 
 import (
+	"errors"
 	"testing"
 
 	libparsex "github.com/bbfh-dev/lib-parsex/v3"
@@ -42,6 +43,9 @@ var Program = libparsex.Program{
 	},
 	EntryPoint: func(rawArgs []string) error {
 		DidRun = true
+		if len(rawArgs) == 0 {
+			return errors.New("this is wrong")
+		}
 		return nil
 	},
 }
