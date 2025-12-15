@@ -29,7 +29,7 @@ func Run(program *Program, args []string) error {
 		goto handle_error
 	}
 
-	err = program.EntryPoint()
+	err = program.EntryPoint(program.rawArgs)
 handle_error:
 	switch err {
 	case PrintHelpErr:
@@ -86,6 +86,7 @@ func parseInput(program *Program, args []string) (*Program, error) {
 	if err := assignPositionalArgs(program, positionalArgs); err != nil {
 		return program, err
 	}
+	program.rawArgs = positionalArgs
 
 	return program, nil
 }

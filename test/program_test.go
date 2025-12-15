@@ -40,7 +40,7 @@ var Program = libparsex.Program{
 	Commands: []*libparsex.Program{
 		{Name: "nested", Description: "Example nested command"},
 	},
-	EntryPoint: func() error {
+	EntryPoint: func(rawArgs []string) error {
 		DidRun = true
 		return nil
 	},

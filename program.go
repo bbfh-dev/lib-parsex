@@ -50,9 +50,12 @@ type Program struct {
 	// NOTE: Parent's .Options will be parsed and set up and until the command name is mentioned in the input.
 	Commands []*Program
 	// The function that will be called when running the Program.
-	EntryPoint func() error
+	//
+	// [rawArgs] contains positional input arguments. It is often more convinient to use provided [.Args] instead.
+	EntryPoint func(rawArgs []string) error
 
 	didParse        bool
+	rawArgs         []string
 	parsedOptions   []*internal.ParsedOption
 	parsedOptionMap map[string]*internal.ParsedOption
 	parsedAltMap    map[string]*internal.ParsedOption
