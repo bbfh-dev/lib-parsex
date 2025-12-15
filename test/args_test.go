@@ -17,7 +17,7 @@ type ArgTestCase struct {
 
 var ArgTestCases = []ArgTestCase{
 	{
-		Input: []string{"--verbose"},
+		Input: []string{"--verbose", "0"},
 		ExpectOptions: ExpectedOptions{
 			Verbose:    true,
 			OtherValue: 69,
@@ -27,7 +27,7 @@ var ArgTestCases = []ArgTestCase{
 		},
 	},
 	{
-		Input: []string{"--stdin-file-path", "Hello World!"},
+		Input: []string{"--stdin-file-path", "Hello World!", "0"},
 		ExpectOptions: ExpectedOptions{
 			StdinFilePath: "Hello World!",
 			OtherValue:    69,
@@ -41,7 +41,7 @@ var ArgTestCases = []ArgTestCase{
 		ExpectErr: "--other-value",
 	},
 	{
-		Input: []string{"--stdin-file-path", "Hello World!", "--verbose", "--other-value=123"},
+		Input: []string{"--stdin-file-path", "Hello World!", "--verbose", "--other-value=123", "0"},
 		ExpectOptions: ExpectedOptions{
 			StdinFilePath: "Hello World!",
 			Verbose:       true,
@@ -50,6 +50,66 @@ var ArgTestCases = []ArgTestCase{
 		ExpectArgs: ExpectedArgs{
 			Input: []string{},
 		},
+	},
+	{
+		Input: []string{"-v", "-o=123", "0"},
+		ExpectOptions: ExpectedOptions{
+			Verbose:    true,
+			OtherValue: 123,
+		},
+		ExpectArgs: ExpectedArgs{
+			Input: []string{},
+		},
+	},
+	{
+		Input: []string{"-v", "-o", "123", "0"},
+		ExpectOptions: ExpectedOptions{
+			Verbose:    true,
+			OtherValue: 123,
+		},
+		ExpectArgs: ExpectedArgs{
+			Input: []string{},
+		},
+	},
+	{
+		Input:     []string{"-vo"},
+		ExpectErr: "contains a non-flag",
+	},
+	{
+		Input: []string{"-v", "123"},
+		ExpectOptions: ExpectedOptions{
+			Verbose:    true,
+			OtherValue: 69,
+		},
+		ExpectArgs: ExpectedArgs{
+			Count: 123,
+			Input: []string{},
+		},
+	},
+	{
+		Input: []string{"-v", "123", "file1"},
+		ExpectOptions: ExpectedOptions{
+			Verbose:    true,
+			OtherValue: 69,
+		},
+		ExpectArgs: ExpectedArgs{
+			Count: 123,
+			Input: []string{"file1"},
+		},
+	},
+	{
+		Input: []string{"123", "file1", "file2", "file3"},
+		ExpectOptions: ExpectedOptions{
+			OtherValue: 69,
+		},
+		ExpectArgs: ExpectedArgs{
+			Count: 123,
+			Input: []string{"file1", "file2", "file3"},
+		},
+	},
+	{
+		Input:     []string{"-v"},
+		ExpectErr: "expected an argument",
 	},
 }
 

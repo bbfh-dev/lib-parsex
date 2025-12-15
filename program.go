@@ -55,6 +55,7 @@ type Program struct {
 	didParse        bool
 	parsedOptions   []*internal.ParsedOption
 	parsedOptionMap map[string]*internal.ParsedOption
+	parsedAltMap    map[string]*internal.ParsedOption
 	parsedArgs      []*internal.ParsedArgument
 	parsedCommands  map[string]*Program
 }
@@ -73,6 +74,7 @@ func (program *Program) Parse() error {
 		internal.HelpOption.Name:    &internal.HelpOption,
 		internal.VersionOption.Name: &internal.VersionOption,
 	}
+	program.parsedAltMap = map[string]*internal.ParsedOption{}
 	program.parsedArgs = []*internal.ParsedArgument{}
 	program.parsedCommands = map[string]*Program{}
 
@@ -141,6 +143,9 @@ func (program *Program) parseOptions() error {
 		}
 		program.parsedOptions = append(program.parsedOptions, option)
 		program.parsedOptionMap[option.Name] = option
+		if option.Alt != "" {
+			program.parsedAltMap[option.Alt] = option
+		}
 	}
 
 	return nil

@@ -18,7 +18,7 @@ type ExpectedOptions struct {
 var Options struct {
 	Verbose       bool   `alt:"v" desc:"Print verbose debug information"`
 	StdinFilePath string `        desc:"Path to the file to pretend that stdin comes from"`
-	OtherValue    int    `                                                                 default:"69"`
+	OtherValue    int    `alt:"o" default:"69"`
 }
 
 type ExpectedArgs struct {
