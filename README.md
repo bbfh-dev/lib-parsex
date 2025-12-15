@@ -6,7 +6,7 @@ Parsex `/pɑːrsɛks/` — a GNU-/POSIX-compiant CLI argument parsing and valida
 
 ```bash
 # Get parsex
-go get -u github.com/bbfh-dev/parsex/v3
+go get -u github.com/bbfh-dev/lib-parsex/v3
 ```
 
 ```go
