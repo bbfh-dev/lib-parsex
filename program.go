@@ -69,13 +69,13 @@ func (program *Program) HasVersion() bool {
 
 func (program *Program) Parse() error {
 	// Built-in values
-	program.parsedOptions = []*internal.ParsedOption{
-		&internal.HelpOption,
-		&internal.VersionOption,
-	}
+	program.parsedOptions = []*internal.ParsedOption{&internal.HelpOption}
 	program.parsedOptionMap = map[string]*internal.ParsedOption{
-		internal.HelpOption.Name:    &internal.HelpOption,
-		internal.VersionOption.Name: &internal.VersionOption,
+		internal.HelpOption.Name: &internal.HelpOption,
+	}
+	if program.HasVersion() {
+		program.parsedOptions = append(program.parsedOptions, &internal.VersionOption)
+		program.parsedOptionMap[internal.VersionOption.Name] = &internal.VersionOption
 	}
 	program.parsedAltMap = map[string]*internal.ParsedOption{}
 	program.parsedArgs = []*internal.ParsedArgument{}
