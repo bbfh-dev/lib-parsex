@@ -18,9 +18,9 @@ var HelpOption = ParsedOption{
 }
 
 var VersionOption = ParsedOption{
-	Name:    "help",
+	Name:    "version",
 	Alt:     "",
-	Desc:    "Print this help message and exit",
+	Desc:    "Print program version and exit",
 	Default: nil,
 	Ref: Ref{
 		Kind:    reflect.Bool,
