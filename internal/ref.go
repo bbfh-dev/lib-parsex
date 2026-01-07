@@ -39,6 +39,10 @@ func (ref Ref) Set(value string) error {
 			return err
 		}
 		ref.Pointer.SetFloat(float64(value))
+
+	case reflect.Pointer:
+		// FIXME: Handle different datatypes
+		ref.Pointer.Elem().Set(reflect.ValueOf(value))
 	}
 
 	return nil
