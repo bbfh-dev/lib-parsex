@@ -42,7 +42,7 @@ func (ref Ref) Set(value string) error {
 
 	case reflect.Pointer:
 		// FIXME: Handle different datatypes
-		ref.Pointer.Elem().Set(reflect.ValueOf(value))
+		ref.Pointer.Set(reflect.ValueOf(&value))
 	}
 
 	return nil
