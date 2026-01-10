@@ -57,7 +57,7 @@ func TestHelp(test *testing.T) {
 
 func TestCall(test *testing.T) {
 	DidRun = false
-	err := libparsex.Run(&Program, []string{})
+	err := libparsex.Run(&Program, []string{"123"})
 	assert.NilError(test, err)
 	assert.Equal(test, DidRun, true)
 }

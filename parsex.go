@@ -44,10 +44,6 @@ handle_error:
 }
 
 func parseInput(program *Program, args []string) (*Program, error) {
-	if len(args) == 0 {
-		return program, nil
-	}
-
 	modifiedOptions := make(map[string]bool)
 	positionalArgs := make([]string, 0, len(args))
 
