@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	libescapes "github.com/bbfh-dev/lib-ansi-escapes"
 	libparsex "github.com/bbfh-dev/lib-parsex/v3"
 	"gotest.tools/assert"
 )
@@ -51,6 +52,7 @@ var Program = libparsex.Program{
 }
 
 func TestHelp(test *testing.T) {
+	libescapes.AllowANSI = true
 	err := libparsex.Run(&Program, []string{"--help"})
 	assert.NilError(test, err)
 }

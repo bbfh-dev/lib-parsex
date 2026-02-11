@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	libescapes "github.com/bbfh-dev/lib-ansi-escapes"
 )
 
 var HelpOption = ParsedOption{
@@ -49,12 +51,24 @@ func (option *ParsedOption) String() string {
 	}
 
 	if option.Default != nil {
-		fmt.Fprintf(&builder, " (default: %v)", *option.Default)
+		fmt.Fprintf(
+			&builder,
+			" %s(default: %v)%s",
+			libescapes.Optional(libescapes.TextColorBrightYellow),
+			*option.Default,
+			libescapes.Optional(libescapes.ColorReset),
+		)
 	}
 
 	builder.WriteString("\n")
 	if option.Desc != "" {
-		builder.WriteString("        # " + option.Desc + "\n")
+		fmt.Fprintf(
+			&builder,
+			"        %s# %s%s\n",
+			libescapes.Optional(libescapes.TextColorWhite),
+			option.Desc,
+			libescapes.Optional(libescapes.ColorReset),
+		)
 	}
 
 	return builder.String()
